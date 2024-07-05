@@ -115,7 +115,6 @@ class BinaryIsothermal2ndOrderPhase:
             kwell to be used when fitting a line compound
         """
         if len(xdata) > 2:
-            plt.plot(xdata, Gdata, '-')
             (a, b, c), _ = curve_fit(self.functional_form, xdata, Gdata,
                                      bounds=([0, -np.inf, -np.inf], [2.0 * kwellmax, np.inf, np.inf]))
             print(a, b, c)
@@ -517,7 +516,6 @@ class Binary2ndOrderPhase:
 
     def fit_from_isothermal(self, xdata, Gdata, kwellmax=1e9):
         if len(xdata) > 2:
-            plt.plot(xdata, Gdata, '-')
             (a, b, c), _ = curve_fit(self.functional_form, xdata, Gdata,
                                      bounds=([0, -np.inf, -np.inf], [2.0 * kwellmax, np.inf, np.inf]))
             print(a, b, c)
