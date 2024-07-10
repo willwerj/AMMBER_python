@@ -3,7 +3,7 @@ from scipy.spatial import ConvexHull
 from scipy.interpolate import CubicSpline
 import numpy as np
 from pycalphad import calculate
-
+import PRISMS_PF_fileGen
 class BinaryIsothermalDiscretePhase:
     "Class representing a single phase at one temperature described by a set of points in composition-Gibbs free energy space"
     def __init__(self, xdata, Gdata):
