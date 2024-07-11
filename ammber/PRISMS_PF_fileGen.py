@@ -1,9 +1,11 @@
-def binary_isothermal_write_parabolic_parameters(binaryIsothermalSys, output_file, template_file, phases=None, component="comp_1"):
+def write_binary_isothermal_parabolic_parameters(binaryIsothermalSys, output_file, template_file, phases=None, component="comp_1"):
     """
     Creates a parameters file from a BinaryIsothermal2ndOrderSystem
 
     Parameters
     ----------
+    binaryIsothermalSys : BinaryIsothermal2ndOrderSystem
+        system to draw parameters from
     output_file : string
         path to file to create
     template_file : string
