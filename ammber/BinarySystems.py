@@ -3,7 +3,7 @@ from scipy.spatial import ConvexHull
 from scipy.interpolate import CubicSpline
 import numpy as np
 from pycalphad import calculate
-import PRISMS_PF_fileGen
+from ammber.utils import write_binary_isothermal_parabolic_parameters
 class BinaryIsothermalDiscretePhase:
     "Class representing a single phase at one temperature described by a set of points in composition-Gibbs free energy space"
     def __init__(self, xdata, Gdata):
@@ -34,8 +34,11 @@ class BinaryIsothermalDiscretePhase:
         BinaryIsothermalDiscretePhase object
         """
         newx = xpoints[np.logical_and(xpoints >= self.xdata[0], xpoints <= self.xdata[-1])]
-        spl = CubicSpline(self.xdata, self.Gdata)
-        return BinaryIsothermalDiscretePhase(newx, spl(newx))
+        if len(newx)>=3:
+            spl = CubicSpline(self.xdata, self.Gdata)
+            return BinaryIsothermalDiscretePhase(newx, spl(newx))
+        # Assume a line compound, don't resample
+        return self
 
     def resample_near_xpoint(self, x, xdist=0.04, npts=101):
         """
@@ -70,8 +73,14 @@ class BinaryIsothermalDiscretePhase:
         -------
         (float) free energy at composition x
         """
-        spl = CubicSpline(self.xdata, self.Gdata)
-        return spl(x)
+        if len(self.xdata)>1:
+            spl = CubicSpline(self.xdata, self.Gdata)
+            return spl(x)
+        elif self.xdata[0]==x:
+            return self.Gdata[0]
+        else:
+            print("Attempted to evaluate free energy of a compound outside its range. This will cause errors.")
+            return None
 
 class BinaryIsothermal2ndOrderPhase:
     "Class representing a single phase at one temperature described by a 2nd order polynomial (parabola)."
@@ -117,7 +126,7 @@ class BinaryIsothermal2ndOrderPhase:
         if len(xdata) > 2:
             (a, b, c), _ = curve_fit(self.functional_form, xdata, Gdata,
                                      bounds=([0, -np.inf, -np.inf], [2.0 * kwellmax, np.inf, np.inf]))
-            print(a, b, c)
+            #print(a, b, c)
             self.kwell = 2.0*a
             self.cmin = -b / self.kwell
             self.fmin = c - self.kwell/2.0 * self.cmin**2
@@ -125,7 +134,7 @@ class BinaryIsothermal2ndOrderPhase:
             self.fmin = Gdata[0]
             self.kwell = kwellmax
             self.cmin = xdata[0]
-            print(Gdata[0], kwellmax, xdata[0])
+            #print(Gdata[0], kwellmax, xdata[0])
         else:
             print("too few points to fit functional form")
 
@@ -465,68 +474,3 @@ def get_lower_convex_hull(inputpoints):
     else:
         lower_convex_hull = points[minx:maxx]
     return lower_convex_hull
-
-class BinaryDiscreteSystem:
-    def __init__(self, temperature_list=[], system_list=[]):
-        self.isothermal_systems = dict(zip(temperature_list, system_list))
-
-    def add_temperature(self, temperature, system):
-        self.isothermal_systems[temperature] = system
-
-    def fromTDB(self, db, elements, component, temperature_list, phase_list=None):
-        for temperature in temperature_list:
-            system = BinaryIsothermalDiscreteSystem()
-            self.isothermal_systems[temperature] = system.fromTDB(
-                db, elements, component, temperature, phase_list=phase_list)
-
-class Binary2ndOrderSystem:
-    def __init__(self, temperature_list=[], system_list=[]):
-        self.phases = {}
-        if phases is not None:
-            self.phases = phases
-
-    def from_discrete(self, discrete_system, kwellmax=1e6):
-        for phase_name in discrete_system.phases.keys():
-            self.phases[phase_name] = BinaryIsothermal2ndOrderPhase()
-            self.phases[phase_name].fit_phase(discrete_system.phases[phase_name].xdata,
-                discrete_system.phases[phase_name].Gdata, kwellmax=kwellmax)
-
-    def to_discrete(self, xdata=None, xrange=(1e-14, 1.0 - 1e-14), npts=1001):
-        discrete_system = BinaryIsothermalDiscreteSystem()
-        for phase_name in self.phases.keys():
-            discrete_system.phases[phase_name] = self.phases[phase_name].discretize(
-                xdata=xdata, xrange=xrange, npts=npts)
-        return discrete_system
-
-
-class Binary2ndOrderPhase:
-    def __init__(self, parameter_dict={"a0":1.0,"a1":0.0,"b0":0.0,"b1":1.0,"c0":0.0,"c1":0.0},
-                     discrete_system=None, phase_name=None, kwellmax=1e9,
-                     isothermal_list=None, temperature_list=None):
-        if discrete_system is not None:
-            if phase_name is None:
-                # just use first phase in discrete system
-                phase_name = next(iter(next(iter(discrete_system)).phases))
-
-            self.a1 = a1
-            self.a0 = a0
-            self.b1 = b1
-        else:
-            self.fit_phase(discrete.xdata, discrete.Gdata, kwellmax=kwellmax)
-
-    def fit_from_isothermal(self, xdata, Gdata, kwellmax=1e9):
-        if len(xdata) > 2:
-            (a, b, c), _ = curve_fit(self.functional_form, xdata, Gdata,
-                                     bounds=([0, -np.inf, -np.inf], [2.0 * kwellmax, np.inf, np.inf]))
-            print(a, b, c)
-            self.kwell = 2.0*a
-            self.cmin = -b / self.kwell
-            self.fmin = c - self.kwell/2.0 * self.cmin**2
-        elif len(xdata) == 1:
-            self.fmin = Gdata[0]
-            self.kwell = kwellmax
-            self.cmin = xdata[0]
-            print(Gdata[0], kwellmax, xdata[0])
-        else:
-            print("too few points to fit functional form")
-
