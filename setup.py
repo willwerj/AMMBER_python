@@ -26,7 +26,7 @@ from setuptools import setup
 
 setup(
     name='ammber',
-    version='0.1.2',    
+    version='0.1.0',    
     description='A Python package for parametrizing gibbs free energy curves for phase-field modeling',
     url='https://github.com/UMThorntongroup/',
     author='W. Beck Andrews',
