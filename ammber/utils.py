@@ -34,7 +34,7 @@ def write_binary_isothermal_parabolic_parameters(binaryIsothermalSys, output_fil
 def _PRISMS_parabolic_parameters(cmin, fmin, kwell, phases, comps, output_file, template_file):
     ## Step 2: Make necessary strings
     num_phases = len(phases)
-    num_comps = len(comps)
+    num_comps = len(comps)+1
     sf = 3
     fmin_str = ""
     cmin_str = ""
