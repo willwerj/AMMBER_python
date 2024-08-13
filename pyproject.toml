@@ -1,5 +1,5 @@
 #
-# Copyright 2024 William Beck Andrews
+# Copyright 2024 W. Beck Andrews
 #
 # MIT License
 #
@@ -22,31 +22,41 @@
 # SOFTWARE.
 #
 
-from setuptools import setup
 
-setup(
-    name='ammber',
-    version='0.1.0',    
-    description='A Python package for parametrizing gibbs free energy curves for phase-field modeling',
-    url='https://github.com/UMThorntongroup/',
-    author='W. Beck Andrews',
-    author_email='wband@umich.edu',
-    license='MIT',
-    test_suite='tests',
-    packages=['ammber'],
-    install_requires=['numpy<2.0',
-                      'scipy',
-                      'pycalphad'
-                      ],
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
 
-    classifiers=[
-        'Development Status :: 1 - Planning',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-    ],
-)
+[project]
+name = "ammber"
+version = "0.1.1"
+description = "A Python package for parametrizing Gibbs free energy curves for phase-field modeling"
+authors = [
+    { name = "W. Beck Andrews", email = "wband@umich.edu" },
+    { name = "Xander Mensah", email = "xmen@umich.edu" },
+    { name = "Katsuyo Thornton", email = "kthorn@umich.edu" }
+]
+license = { file = "LICENSE.md" }
+readme = "README.md"
+
+requires-python = ">=2.7, <4"
+
+dependencies = [
+    "numpy<2.0",
+    "scipy",
+    "pycalphad",
+]
+
+classifiers=[
+    'Development Status :: 1 - Planning',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: MIT License',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.4',
+    'Programming Language :: Python :: 3.5',
+]
+
+[project.urls]
+Homepage = "https://github.com/UMThorntongroup/"
