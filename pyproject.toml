@@ -29,7 +29,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ammber"
-version = "0.1.1"
+version = "0.1.2"
 description = "A Python package for parametrizing Gibbs free energy curves for phase-field modeling"
 authors = [
     { name = "W. Beck Andrews", email = "wband@umich.edu" },

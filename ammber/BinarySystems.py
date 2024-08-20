@@ -206,6 +206,8 @@ class BinaryIsothermalDiscreteSystem:
             elements.append("VA")
         if phase_list is None:
             phase_list = list(db.phases.keys())
+            cal = calculate(db, elements, phase_list, P=101325, T=temperature, output='GM', pdens=1001)
+            phase_list = set(cal.Phase.data[0][0][0])
         for phase_name in phase_list:
             result = calculate(db, elements, phase_name, P=101325, T=temperature, output='GM', pdens=1001)
             self.phases[phase_name] = BinaryIsothermalDiscretePhase(
