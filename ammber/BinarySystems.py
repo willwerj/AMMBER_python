@@ -4,8 +4,11 @@ from scipy.interpolate import CubicSpline
 import numpy as np
 from pycalphad import calculate
 from utils import write_binary_isothermal_parabolic_parameters
+
+
 class BinaryIsothermalDiscretePhase:
     "Class representing a single phase at one temperature described by a set of points in composition-Gibbs free energy space"
+
     def __init__(self, xdata, Gdata):
         """
         Constructor. Initializes the phase object from points in composition-Gibbs free energy space.
@@ -34,7 +37,7 @@ class BinaryIsothermalDiscretePhase:
         BinaryIsothermalDiscretePhase object
         """
         newx = xpoints[np.logical_and(xpoints >= self.xdata[0], xpoints <= self.xdata[-1])]
-        if len(newx)>=3:
+        if len(newx) >= 3:
             spl = CubicSpline(self.xdata, self.Gdata)
             return BinaryIsothermalDiscretePhase(newx, spl(newx))
         # Assume a line compound, don't resample
@@ -73,18 +76,20 @@ class BinaryIsothermalDiscretePhase:
         -------
         (float) free energy at composition x
         """
-        if len(self.xdata)>1:
+        if len(self.xdata) > 1:
             spl = CubicSpline(self.xdata, self.Gdata)
             return spl(x)
-        elif self.xdata[0]==x:
+        elif self.xdata[0] == x:
             return self.Gdata[0]
         else:
             print("Attempted to evaluate free energy of a compound outside its range. This will cause errors.")
             return None
 
+
 class BinaryIsothermal2ndOrderPhase:
     "Class representing a single phase at one temperature described by a 2nd order polynomial (parabola)."
-    def __init__(self, fmin=0.0, kwell=1.0, cmin=0.5, discrete=None, kwellmax=1e9):#todo
+
+    def __init__(self, fmin=0.0, kwell=1.0, cmin=0.5, discrete=None, kwellmax=1e9):  # todo
         """
         Constructor.
         
@@ -126,15 +131,15 @@ class BinaryIsothermal2ndOrderPhase:
         if len(xdata) > 2:
             (a, b, c), _ = curve_fit(self.functional_form, xdata, Gdata,
                                      bounds=([0, -np.inf, -np.inf], [2.0 * kwellmax, np.inf, np.inf]))
-            #print(a, b, c)
-            self.kwell = 2.0*a
+            # print(a, b, c)
+            self.kwell = 2.0 * a
             self.cmin = -b / self.kwell
-            self.fmin = c - self.kwell/2.0 * self.cmin**2
+            self.fmin = c - self.kwell / 2.0 * self.cmin ** 2
         elif len(xdata) == 1:
             self.fmin = Gdata[0]
             self.kwell = kwellmax
             self.cmin = xdata[0]
-            #print(Gdata[0], kwellmax, xdata[0])
+            # print(Gdata[0], kwellmax, xdata[0])
         else:
             print("too few points to fit functional form")
 
@@ -156,7 +161,7 @@ class BinaryIsothermal2ndOrderPhase:
         -------
         (float) free energy at composition x
         """
-        return self.fmin + self.kwell / 2.0 * (x - self.cmin)**2
+        return self.fmin + self.kwell / 2.0 * (x - self.cmin) ** 2
 
     def discretize(self, xdata=None, xrange=(1e-14, 1.0 - 1e-14), npts=1001):
         """
@@ -182,6 +187,7 @@ class BinaryIsothermal2ndOrderPhase:
 
 class BinaryIsothermalDiscreteSystem:
     "Class representing a seet of phases at one temperature described by a set of points in composition-Gibbs free energy space"
+
     def __init__(self):
         "Constructor. Initializes with an empty set of phases."
         self.phases = {}
@@ -197,7 +203,7 @@ class BinaryIsothermalDiscreteSystem:
         db : pycalphad database
         elements : list (string)
             The space of compositions of interest (Binary). Element abbreviations must be all-caps.
-        componenet : string
+        component : string
             Element abbreviation for element corresponding to x=1.
         phase_list : list (string)
             If specified, only listed phases will be constructed, otherwise, all available phases will be constructed.
@@ -229,7 +235,7 @@ class BinaryIsothermalDiscreteSystem:
         """
         self.phases[name] = BinaryIsothermalDiscretePhase(xdata, Gdata)
 
-    def get_lc_hull(self, recalculate=False):#todo
+    def get_lc_hull(self, recalculate=False):  # todo
         """
         Returns a the set of x-G points that lie on the convex hull of all points in all phases
         
@@ -253,7 +259,7 @@ class BinaryIsothermalDiscreteSystem:
             self.lc_hull = get_lower_convex_hull(allpoints)
         return self.lc_hull
 
-    def get_equilibrium_system(self, miscibility_gap_threshold=0.1):#todo
+    def get_equilibrium_system(self, miscibility_gap_threshold=0.1):  # todo
         """
         Returns the phases that may be present at any composition at equilibrium
         
@@ -267,7 +273,7 @@ class BinaryIsothermalDiscreteSystem:
         BinaryIsothermalDiscreteSystem object
         """
         lc_hull = self.get_lc_hull()
-  #      print(lc_hull)
+        #      print(lc_hull)
         equilibrium_system = BinaryIsothermalDiscreteSystem()
         equilibrium_system._is_equilibrium_system = True
         for phase in self.phases:
@@ -283,32 +289,33 @@ class BinaryIsothermalDiscreteSystem:
             gap_inds = []
             if phase in equilibrium_system.phases:
                 gap_inds = np.nonzero(equilibrium_system.phases[phase].xdata[1:] -
-                            equilibrium_system.phases[phase].xdata[:-1] > miscibility_gap_threshold)[0]
-            #print(gap_inds)
+                                      equilibrium_system.phases[phase].xdata[:-1] > miscibility_gap_threshold)[0]
+            # print(gap_inds)
             if len(gap_inds) > 0:
                 phase_temp = equilibrium_system.phases.pop(phase)
-                for i in range(0, len(gap_inds)+1):
+                for i in range(0, len(gap_inds) + 1):
                     if i == 0:
                         start = 0
                     else:
-                        start = gap_inds[i-1]+1
+                        start = gap_inds[i - 1] + 1
                     if i == len(gap_inds):
                         end = phase_temp.xdata.size
                     else:
-                        end = gap_inds[i]+1
-                    #print(start,end)
+                        end = gap_inds[i] + 1
+                    # print(start,end)
                     if end - start >= 1:
                         # phase is represented by multiple points
-                        equilibrium_system.phases[phase +'_'+ str(i)] = BinaryIsothermalDiscretePhase(
+                        equilibrium_system.phases[phase + '_' + str(i)] = BinaryIsothermalDiscretePhase(
                             phase_temp.xdata[start:end], phase_temp.Gdata[start:end])
-                    elif(start == end):
+                    elif (start == end):
                         # phase is represented by single point
-                        print("phase "+phase+'_'+str(i)+" is represented by a single point, a finer discretization may be needed")
-                        equilibrium_system.phases[phase +'_'+ str(i)] = BinaryIsothermalDiscretePhase(
+                        print("phase " + phase + '_' + str(
+                            i) + " is represented by a single point, a finer discretization may be needed")
+                        equilibrium_system.phases[phase + '_' + str(i)] = BinaryIsothermalDiscretePhase(
                             phase_temp.xdata[start], phase_temp.Gdata[start])
         return equilibrium_system
 
-    def get_equilibrium(self, x):#todo
+    def get_equilibrium(self, x):  # todo
         """
         Returns the composition or phase-boundary compositions of the 1 or 2 phases that exist at equilibrium at composition x
         
@@ -378,6 +385,7 @@ class BinaryIsothermalDiscreteSystem:
 
 class BinaryIsothermal2ndOrderSystem:
     "Class representing a seet of phases at one temperature described by a second order polynomial (parabola)"
+
     def __init__(self, phases=None):
         """
         Constructor.
@@ -405,9 +413,9 @@ class BinaryIsothermal2ndOrderSystem:
         for phase_name in discrete_system.phases.keys():
             self.phases[phase_name] = BinaryIsothermal2ndOrderPhase()
             self.phases[phase_name].fit_phase(discrete_system.phases[phase_name].xdata,
-                discrete_system.phases[phase_name].Gdata, kwellmax=kwellmax)
+                                              discrete_system.phases[phase_name].Gdata, kwellmax=kwellmax)
 
-    def from_discrete_near_equilibrium(self, discrete_system, x, kwellmax=1e6, xdist=0.001, npts=101):#todo
+    def from_discrete_near_equilibrium(self, discrete_system, x, kwellmax=1e6, xdist=0.001, npts=101):  # todo
         """
         Builds parabolic phases from a discrete system by fitting near phase-boundaries.
         
@@ -467,10 +475,10 @@ def get_lower_convex_hull(inputpoints):
     points = inputpoints[hull.vertices]
     minx = np.argmin(points[:, 0])
     maxx = np.argmax(points[:, 0])
-#    if abs(maxx - minx) <= 1:
-#        lower_convex_hull = np.stack([points[minx],points[maxx]])
-#    else:
-    maxx = maxx+1
+    #    if abs(maxx - minx) <= 1:
+    #        lower_convex_hull = np.stack([points[minx],points[maxx]])
+    #    else:
+    maxx = maxx + 1
     if minx >= maxx:
         lower_convex_hull = np.concatenate([points[minx:], points[:maxx]])
     else:

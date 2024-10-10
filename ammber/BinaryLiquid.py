@@ -27,7 +27,7 @@ import DataManagement as dm
 from HSX import HSX
 
 # reduce verbosity of pulling DFT energies from the MP API
-plt.switch_backend('agg')
+# plt.switch_backend('agg')
 plt.rcParams['axes.xmargin'] = 0.005
 plt.rcParams['axes.ymargin'] = 0
 warnings.filterwarnings("ignore")
